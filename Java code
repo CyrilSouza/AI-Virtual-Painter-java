@@ -1,0 +1,111 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class JavaPaintApp extends JFrame {
+    private String currentTool = "Select Tool";
+    private int radius = 40;
+    private int thickness = 4;
+    private int prevX, prevY;
+    private boolean varInits = false;
+
+    public JavaPaintApp() {
+        setTitle("Java Paint App");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JPanel toolsPanel = new JPanel();
+        toolsPanel.setLayout(new FlowLayout());
+        toolsPanel.add(createToolButton("Line"));
+        toolsPanel.add(createToolButton("Rectangle"));
+        toolsPanel.add(createToolButton("Draw"));
+        toolsPanel.add(createToolButton("Circle"));
+        toolsPanel.add(createToolButton("Erase"));
+
+        add(toolsPanel, BorderLayout.NORTH);
+
+        Canvas canvas = new Canvas();
+        add(canvas, BorderLayout.CENTER);
+
+        setToolButtonActionListeners(canvas);
+
+        currentTool = "Draw";
+        canvas.addMouseListener(canvas);
+        canvas.addMouseMotionListener(canvas);
+    }
+
+    private JButton createToolButton(String tool) {
+        JButton button = new JButton(tool);
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentTool = tool;
+                System.out.println("Your current tool is set to: " + currentTool);
+            }
+        });
+        return button;
+    }
+
+    private void setToolButtonActionListeners(Canvas canvas) {
+        for (Component component : ((JPanel) getContentPane().getComponent(0)).getComponents()) {
+            if (component instanceof JButton) {
+                ((JButton) component).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        canvas.setCurrentTool(currentTool);
+                    }
+                });
+            }
+        }
+    }
+
+    class Canvas extends JPanel {
+        private String currentTool = "Draw";
+
+        public void setCurrentTool(String tool) {
+            currentTool = tool;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (currentTool.equals("Draw")) {
+                g.drawLine(prevX, prevY, getX(), getY());
+                prevX = getX();
+                prevY = getY();
+            } else if (currentTool.equals("Line")) {
+                g.drawLine(prevX, prevY, getX(), getY());
+            } else if (currentTool.equals("Rectangle")) {
+                g.drawRect(prevX, prevY, getX() - prevX, getY() - prevY);
+            } else if (currentTool.equals("Circle")) {
+                int radius = (int) Math.sqrt(Math.pow(getX() - prevX, 2) + Math.pow(getY() - prevY, 2));
+                g.drawOval(prevX - radius, prevY - radius, 2 * radius, 2 * radius);
+            } else if (currentTool.equals("Erase")) {
+                g.setColor(getBackground());
+                g.fillOval(getX() - 15, getY() - 15, 30, 30);
+                g.setColor(getForeground());
+            }
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            prevX = e.getX();
+            prevY = e.getY();
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (currentTool.equals("Draw")) {
+                repaint();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JavaPaintApp app = new JavaPaintApp();
+            app.setVisible(true);
+        });
+    }
+}
